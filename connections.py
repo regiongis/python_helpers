@@ -13,70 +13,33 @@ con.sql_to_dataframe('DISTRIBUTION', 'select * from proj_belysning.belysning lim
 import pandas as pd
 from sqlalchemy import create_engine
 
-PRODUCTION = {
-    'host': 'xxx',
-    'dbname': 'xxx',
-    'user': 'xxx',
-    'password': 'xxx',
-    'port': 5432
-}
-
-DISTRIBUTION = {
-    'host': 'xxx',
-    'dbname': 'xxx',
-    'user': 'xxx',
-    'password': 'xxx',
-    'port': 5432
-}
-
-COLLECTOR = {
-    'host': 'xxx',
-    'dbname': 'xxx',
-    'user': 'xxx',
-    'password': 'xxx',
-    'port': 5432
-}
-
-def get_connection_sting(connection):
+class SqlConnection:
     """
-    Returns connection string for SQL Alchemy engine.
-    Following connections are available:
-    'PRODUCTION', 
-    'DISTRIBUTION',
-    'COLLECTOR'
+    A connection class for a sql database. Define host, name of database, username, password and port.
     """
 
-    if connection not in ['PRODUCTION', 'DISTRIBUTION', 'COLLECTOR']:
-        raise ValueError("Couldn't not find connection with given name")
+    def __init__(self, host, dbname, user, passw, port):
+        self.host = host
+        self.dbname = dbname
+        self.user = user
+        self.passw = passw
+        self.port = port
 
-    if connection == 'PRODUCTION':
-        server = PRODUCTION
-    if connection == 'DISTRIBUTION':
-        server = DISTRIBUTION
-    if connection == 'COLLECTOR':
-        server = COLLECTOR
+    def get_connection_sting(self):
+        """
+        Returns connection string for SQL Alchemy engine.
+        """
+        con_str = f'postgresql://{self.user}:{self.passw}@{self.host}:{self.port}/{self.dbname}'
 
-    user =  server.get('user')
-    password = server.get('password')
-    host = server.get('host')
-    port = server.get('port')
-    dbname = server.get('dbname')
+        return con_str
 
-    con_str = 'postgresql://{0}:{1}@{2}:{3}/{4}'.format(user, password, host, port, dbname)
+    def sql_to_dataframe(self, query):
+        """
+        Takes a SQL query and return Pandas dataframe
+        """
 
-    return con_str
+        con_str = self.get_connection_sting()
+        con = create_engine(con_str)
+        df = pd.read_sql_query(query,con=con)
 
-def sql_to_dataframe(connection, query):
-    """
-    Takes DB connection and SQL query and return Pandas dataframe
-    Following connections are available:
-    'PRODUCTION', 
-    'DISTRIBUTION',
-    'COLLECTOR'
-    """
-
-    con_str = get_connection_sting(connection)
-    con = create_engine(con_str)
-    df = pd.read_sql_query(query,con=con)
-
-    return df
+        return df
